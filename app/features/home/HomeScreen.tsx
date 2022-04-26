@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, SafeAreaView } from 'react-native';
 import { MainBottomTabParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTheme, Text, Button } from '@rneui/themed';
+import { useAppDispatch } from '../../hooks';
+import { fetchRandomImages } from './homeSlice';
 
 const styles = StyleSheet.create({
   container: {
@@ -36,6 +38,12 @@ type HomeScreenProp = BottomTabNavigationProp<MainBottomTabParamList, 'Home'>;
 const HomeScreen: React.FC<MainBottomTabParamList> = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<HomeScreenProp>();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(fetchRandomImages())
+  }, []);
+  
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.text} h4 h4Style={{ color: theme?.colors?.primary }}>

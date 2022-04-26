@@ -7,7 +7,7 @@ export type MainBottomTabParamList = {
 export type CarStackParamList = {
   Listings: undefined;
   Details: {
-    carDetails: object,
+    carDetails: object;
   };
 };
 
@@ -31,4 +31,18 @@ export interface CarState {
 
 export interface error {
   message: string;
+}
+
+export interface ImageState {
+  loading: boolean;
+  images: ImageData[];
+  error: error;
+}
+export interface ImageData {
+  id: string;
+  author: string;
+  width: number;
+  height: number;
+  url: string;
+  download_url: string;
 }
