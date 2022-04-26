@@ -132,6 +132,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 5,
   },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 200,
+    marginHorizontal: 10,
+    backgroundColor: 'rgba(57, 122, 248, 0.7)',
+  },
+  noData: {
+    fontSize: 24,
+    color: '#fff',
+  }
 });
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
@@ -139,9 +151,17 @@ type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
 const ListingsScreen: React.FC<CarStackParamList> = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [text, onChangeText] = useState('');
+  const [carMake, setCarMake] = useState('');
+  const [carColor, setCarColor] = useState('');
+  const [carYear, setCarYear] = useState('');
   const [check1, setCheck1] = useState(false);
+  const [price1Kto2K, setPrice1Kto2K] = useState(false);
+  const [price2Kto3K, setPrice2Kto3K] = useState(false);
+  const [price3KAbove, setPrice3KAbove] = useState(false);
+  const [year1900To2000, setYear1900To2000] = useState(false);
+  const [year2001ToPresent, setYear2001ToPresent] = useState(false);
   const { cars, loading } = useAppSelector((state) => state.carListings);
+  const [listedCars, setListedCars] = useState(cars);
   const { images } = useAppSelector((state) => state.home);
   const dispatch = useAppDispatch();
 
@@ -167,7 +187,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     imagesArray.push(image.download_url);
   });
 
-  const clickHandler = () => {
+  const onPressFilters = () => {
     setVisible(true);
   };
 
@@ -178,6 +198,101 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const playgroundNavigate = () => {
     toggleOverlay();
   };
+
+  const clearState = () => {
+    setCarMake('');
+    setCarColor('');
+    setPrice1Kto2K(false);
+    setPrice2Kto3K(false);
+    setPrice3KAbove(false);
+    setCarYear('');
+    setYear1900To2000(false);
+    setYear2001ToPresent(false);
+  };
+
+  const clearFilterValues = () => {
+    // clear filter value state
+    clearState();
+  };
+
+  const onCarMakeChange = (value: string) => {
+    setCarMake(value);
+  };
+
+  const onCarColorChange = (value: string) => {
+    setCarColor(value);
+  };
+
+  const onChangeCarYear = (value: string) => {
+    setCarYear(value);
+  };
+
+  const applyFilters = () => {
+    let isFilterApplied = false;
+    let filteredCars = cars;
+    if (carMake) {
+      filteredCars = filteredCars.filter(
+        (car) => car.car.toLowerCase() === carMake.toLowerCase()
+      );
+      isFilterApplied = true;
+    }
+    if (carColor) {
+      filteredCars = filteredCars.filter(
+        (car) => car.car_color.toLowerCase() === carColor.toLowerCase()
+      );
+      isFilterApplied = true;
+    }
+    if (carYear) {
+      filteredCars = filteredCars.filter(
+        (car) => car.car_model_year === Number(carYear)
+      );
+      isFilterApplied = true;
+    }
+    if (year1900To2000) {
+      filteredCars = filteredCars.filter(
+        (car) => car.car_model_year >= 1900 && car.car_model_year <= 2000
+      );
+      isFilterApplied = true;
+    }
+    if (year2001ToPresent) {
+      filteredCars = filteredCars.filter(
+        (car) =>
+          car.car_model_year >= 2001 &&
+          car.car_model_year <= new Date().getFullYear()
+      );
+      isFilterApplied = true;
+    }
+    if (price1Kto2K) {
+      filteredCars = filteredCars.filter(
+        (car) =>
+          Math.floor(Number(car.price.substring(1))) >= 1000 &&
+          Math.floor(Number(car.price.substring(1))) <= 2000
+      );
+      isFilterApplied = true;
+    }
+    if (price2Kto3K) {
+      filteredCars = filteredCars.filter(
+        (car) =>
+          Math.floor(Number(car.price.substring(1))) >= 2001 &&
+          Math.floor(Number(car.price.substring(1))) <= 3000
+      );
+      isFilterApplied = true;
+    }
+    if (price3KAbove) {
+      filteredCars = filteredCars.filter(
+        (car) => Math.floor(Number(car.price.substring(1))) >= 3001
+      );
+      isFilterApplied = true;
+    }
+    setListedCars(filteredCars);
+    toggleOverlay();
+  };
+
+  const ListEmptyComponent = () => (
+    <View style={styles.noDataContainer}>
+      <Text style={styles.noData}>No Data Found</Text>
+    </View>
+  );
 
   const Car = ({ carDetails }: any) => {
     const navigation = useNavigation<ListingScreenProp>();
@@ -216,16 +331,17 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
         <>
           <FlatList
             numColumns={2}
-            data={cars}
+            data={listedCars}
             style={styles.list}
             renderItem={renderItem}
             keyExtractor={(car) => car.car_vin}
             refreshing={isFetching}
             onRefresh={refreshCars}
+            ListEmptyComponent={ListEmptyComponent}
           />
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={clickHandler}
+            onPress={onPressFilters}
             style={styles.touchableOpacityStyle}
           >
             <ListItem style={styles.floatingButtonStyle}>
@@ -255,7 +371,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 <View style={styles.headerRight}>
                   <TouchableOpacity
                     style={{ marginLeft: 10 }}
-                    onPress={playgroundNavigate}
+                    onPress={clearFilterValues}
                   >
                     <Text style={styles.textSecondary}>Clear</Text>
                   </TouchableOpacity>
@@ -274,8 +390,8 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 <ListItem.Content>
                   <TextInput
                     style={styles.input}
-                    onChangeText={onChangeText}
-                    value={text}
+                    onChangeText={onCarMakeChange}
+                    value={carMake}
                   />
                 </ListItem.Content>
               </ListItem>
@@ -286,8 +402,8 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 <ListItem.Content>
                   <TextInput
                     style={styles.input}
-                    onChangeText={onChangeText}
-                    value={text}
+                    onChangeText={onCarColorChange}
+                    value={carColor}
                   />
                 </ListItem.Content>
               </ListItem>
@@ -298,15 +414,21 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 <ListItem.Content>
                   <CheckBox
                     center
-                    title='< $200'
-                    checked={check1}
-                    onPress={() => setCheck1(!check1)}
+                    title='$1000 - $2000'
+                    checked={price1Kto2K}
+                    onPress={() => setPrice1Kto2K(!price1Kto2K)}
                   />
                   <CheckBox
                     center
-                    title='> $200'
-                    checked={check1}
-                    onPress={() => setCheck1(!check1)}
+                    title='$2001 - $3000'
+                    checked={price2Kto3K}
+                    onPress={() => setPrice2Kto3K(!price2Kto3K)}
+                  />
+                  <CheckBox
+                    center
+                    title='> $3000'
+                    checked={price3KAbove}
+                    onPress={() => setPrice3KAbove(!price3KAbove)}
                   />
                 </ListItem.Content>
               </ListItem>
@@ -315,34 +437,29 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                   <ListItem.Title>Year</ListItem.Title>
                 </ListItem.Content>
                 <ListItem.Content>
-                  <CheckBox
-                    center
-                    title='< 2000'
-                    checked={check1}
-                    onPress={() => setCheck1(!check1)}
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={onChangeCarYear}
+                    value={carYear}
+                    placeholder='Enter Year'
+                    keyboardType='numeric'
                   />
                   <CheckBox
                     center
-                    title='2000 - 2010'
-                    checked={check1}
-                    onPress={() => setCheck1(!check1)}
+                    title='1900 - 2000'
+                    checked={year1900To2000}
+                    onPress={() => setYear1900To2000(!year1900To2000)}
                   />
                   <CheckBox
                     center
-                    title='2011 - 2020'
-                    checked={check1}
-                    onPress={() => setCheck1(!check1)}
-                  />
-                  <CheckBox
-                    center
-                    title='> 2020'
-                    checked={check1}
-                    onPress={() => setCheck1(!check1)}
+                    title='2001 - Present'
+                    checked={year2001ToPresent}
+                    onPress={() => setYear2001ToPresent(!year2001ToPresent)}
                   />
                 </ListItem.Content>
               </ListItem>
               <Button
-                style={{ paddingVertical: 20, marginTop: 20 }}
+                style={{ marginTop: 20 }}
                 icon={
                   <Icon
                     name='check'
@@ -352,8 +469,8 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                     iconStyle={{ marginRight: 10 }}
                   />
                 }
-                title='Apply'
-                onPress={toggleOverlay}
+                title='Apply filter'
+                onPress={applyFilters}
               />
             </View>
           </Overlay>
