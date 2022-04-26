@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
+import carListingsSlicer from './features/carListings/carListingsSlicer';
 import testSlice from './features/test/testSlice';
 
 export const store = configureStore({
     reducer: {
-        test: testSlice
+        carListings: carListingsSlicer,
+        test: testSlice,
     }
 });
 

@@ -1,26 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, SafeAreaView } from 'react-native';
+import { StyleSheet, SafeAreaView } from 'react-native';
 import { MainBottomTabParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useTheme, Text, Button } from '@rneui/themed';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
     alignContent: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    textAlign: 'center',
+    padding: 5,
+  },
+  btnContainerStyle: {
+    width: 200,
+    marginHorizontal: 50,
+    marginVertical: 10,
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  btnStyle: {
+    borderColor: 'rgba(78, 116, 289, 1)',
+  },
+  btnTitleStyle: {
+    color: 'rgba(78, 116, 289, 1)',
   },
 });
 
 type HomeScreenProp = BottomTabNavigationProp<MainBottomTabParamList, 'Home'>;
 
 const HomeScreen: React.FC<MainBottomTabParamList> = () => {
+  const { theme } = useTheme();
   const navigation = useNavigation<HomeScreenProp>();
   return (
     <SafeAreaView style={styles.container}>
-      <Text>Home Screen</Text>
+      <Text style={styles.text} h4 h4Style={{ color: theme?.colors?.primary }}>
+        Welcome to Car Rental App
+      </Text>
       <Button
-        title='Go To Cars'
+        title='Click Here'
+        buttonStyle={styles.btnStyle}
+        type='outline'
+        titleStyle={styles.btnTitleStyle}
+        containerStyle={styles.btnContainerStyle}
         onPress={() => navigation.navigate('Car Listings')}
       />
     </SafeAreaView>
