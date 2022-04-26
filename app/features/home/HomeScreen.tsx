@@ -6,6 +6,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTheme, Text, Button } from '@rneui/themed';
 import { useAppDispatch } from '../../hooks';
 import { fetchRandomImages } from './homeSlice';
+import { fetchCars } from '../carListings/carListingsSlicer';
 
 const styles = StyleSheet.create({
   container: {
@@ -41,7 +42,8 @@ const HomeScreen: React.FC<MainBottomTabParamList> = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchRandomImages())
+    dispatch(fetchRandomImages());
+    dispatch(fetchCars());
   }, []);
   
   return (
@@ -50,7 +52,7 @@ const HomeScreen: React.FC<MainBottomTabParamList> = () => {
         Welcome to Car Rental App
       </Text>
       <Button
-        title='Click Here'
+        title='Book Rental Car Now'
         buttonStyle={styles.btnStyle}
         type='outline'
         titleStyle={styles.btnTitleStyle}
