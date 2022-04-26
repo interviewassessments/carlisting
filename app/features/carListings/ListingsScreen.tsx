@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchCars } from './carListingsSlicer';
+import { generateRandomImage } from '../../utils/randomImageGenerator';
 
 const sampleImage = require('../../images/sample-image.png');
 
@@ -59,51 +60,72 @@ const styles = StyleSheet.create({
   },
   loader: {
     justifyContent: 'center',
-    alignItems:'center',
+    alignItems: 'center',
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)'
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  imageLoader: {
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    width: '100%',
   }
 });
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
 
-const Car = ({ carDetails }: any) => {
-  const navigation = useNavigation<ListingScreenProp>();
-  console.log('carDetails', carDetails)
-  return (
-    <SafeAreaView style={styles.imageContainer}>
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('Details', {
-            carDetails,
-          })
-        }
-      >
-        <Image
-          source={{ uri: DEFAULT_IMAGE }}
-          containerStyle={styles.item}
-          PlaceholderContent={<ActivityIndicator />}
-        />
-      </TouchableOpacity>
-      <View>
-        <Text style={styles.text}>{carDetails.car}</Text>
-        <Text style={styles.text}>{`${carDetails.price}/day`}</Text>
-      </View>
-    </SafeAreaView>
-  );
-};
-
 const ListingsScreen: React.FC<CarStackParamList> = () => {
+  const [isFetching, setIsFetching] = useState(false);
   const { cars, loading } = useAppSelector((state) => state.carListings);
+  const { images } = useAppSelector((state) => state.home);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     dispatch(fetchCars());
   }, []);
 
+  const refreshCars = () => {
+    setIsFetching(true);
+    dispatch(fetchCars());
+    setIsFetching(false);
+  };
+
   if (loading) {
-    return <ActivityIndicator style={styles.loader} size="large" />;
+    return <ActivityIndicator style={styles.loader} color="#0000ff" size='large' />;
   }
+
+  const imagesArray: string[] = [];
+
+  images?.map((image) => {
+    imagesArray.push(image.download_url);
+  });
+
+  const Car = ({ carDetails }: any) => {
+    const navigation = useNavigation<ListingScreenProp>();
+    return (
+      <SafeAreaView style={styles.imageContainer}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('Details', {
+              carDetails,
+            })
+          }
+        >
+          <Image
+            source={{ uri: generateRandomImage(imagesArray) }}
+            containerStyle={styles.item}
+            PlaceholderContent={<ActivityIndicator color="#0000ff" style={styles.imageLoader} />}
+          />
+        </TouchableOpacity>
+        <View>
+          <Text style={styles.text}>{carDetails.car}</Text>
+          <Text style={styles.text}>{`${carDetails.price}/day`}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  };
+
   const renderItem: ListRenderItem<CarData> = ({ item }) => (
     <Car carDetails={item} />
   );
@@ -116,6 +138,8 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
         style={styles.list}
         renderItem={renderItem}
         keyExtractor={(car) => car.car_vin}
+        refreshing={isFetching}
+        onRefresh={refreshCars}
       />
     </SafeAreaView>
   );
