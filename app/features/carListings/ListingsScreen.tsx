@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { Image } from '@rneui/themed';
 import { CarData, CarStackParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppSelector } from '../../hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { fetchCars } from './carListingsSlicer';
 
 const sampleImage = require('../../images/sample-image.png');
 
@@ -56,6 +57,12 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     flex: 1,
   },
+  loader: {
+    justifyContent: 'center',
+    alignItems:'center',
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.1)'
+  }
 });
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
@@ -87,7 +94,16 @@ const Car = ({ carDetails }: any) => {
 };
 
 const ListingsScreen: React.FC<CarStackParamList> = () => {
-  const { cars } = useAppSelector((state) => state.carListings);
+  const { cars, loading } = useAppSelector((state) => state.carListings);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(fetchCars());
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator style={styles.loader} size="large" />;
+  }
   const renderItem: ListRenderItem<CarData> = ({ item }) => (
     <Car carDetails={item} />
   );

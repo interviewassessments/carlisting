@@ -1,28 +1,8 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { CarState } from '../../utils/types';
-
-const initialCarListingsData = [
-  {
-    id: 1,
-    car: 'Mitsubishi',
-    car_model: 'Montero',
-    car_color: 'Yellow',
-    car_model_year: 2002,
-    car_vin: 'SAJWJ0FF3F8321657',
-    price: '$2814.46',
-    availability: false,
-  },
-  {
-    id: 2,
-    car: 'Volkswagen',
-    car_model: 'Passat',
-    car_color: 'Maroon',
-    car_model_year: 2008,
-    car_vin: 'WBANV9C51AC203320',
-    price: '$1731.98',
-    availability: false,
-  },
-];
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { api } from '../../api/apiConstants';
+import { fetchCarsAPI } from '../../api/carListingsApi';
+import { GENERAL_ERROR_MESSAGE, initialCarListingsData } from '../../utils/constants';
+import { CarData, CarState } from '../../utils/types';
 
 
 
@@ -34,10 +14,38 @@ const initialState: CarState = {
   },
 };
 
+const requestParams = {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+  },
+};
+
+export const fetchCars = createAsyncThunk("cars/fetchCars", async () => {
+  const response = await fetchCarsAPI(
+    api.cars,
+    requestParams
+  );
+  return response.cars as CarData[];
+});
+
 const carListingsSlice = createSlice({
   name: 'carlistings',
   initialState,
   reducers: {},
+  extraReducers: builder => {
+    builder.addCase(fetchCars.pending, (state) => {
+      state.loading = true;
+      state.error.message = '';
+    }).addCase(fetchCars.fulfilled, (state, action) => {
+      state.cars = action.payload;
+      state.loading = false;
+      state.error.message = '';
+    }).addCase(fetchCars.rejected, (state) => {
+      state.loading = false;
+      state.error.message = GENERAL_ERROR_MESSAGE;
+    });
+  },
 });
 
 export default carListingsSlice.reducer;
