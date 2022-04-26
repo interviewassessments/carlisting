@@ -9,16 +9,16 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
+  Platform,
 } from 'react-native';
 import {
-  Button,
   Icon,
   Image,
   Overlay,
   Header as HeaderRNE,
-  HeaderProps,
   ListItem,
   CheckBox,
+  SearchBar,
 } from '@rneui/themed';
 import { CarData, CarStackParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
@@ -26,6 +26,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchCars } from './carListingsSlicer';
 import { generateRandomImage } from '../../utils/randomImageGenerator';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const styles = StyleSheet.create({
   container: {
@@ -137,13 +138,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: 200,
-    marginHorizontal: 10,
-    backgroundColor: 'rgba(57, 122, 248, 0.7)',
+    marginVertical: 10,
   },
   noData: {
     fontSize: 24,
-    color: '#fff',
-  }
+    color: '#397af8',
+  },
+  checkBoxContainer: {
+    marginRight: 0,
+  },
+  overlayStyle: {
+    flex: 2,
+    justifyContent: 'center',
+    marginTop: Platform.OS === 'android' ? 0 : 50,
+  },
 });
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
@@ -154,7 +162,6 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const [carMake, setCarMake] = useState('');
   const [carColor, setCarColor] = useState('');
   const [carYear, setCarYear] = useState('');
-  const [check1, setCheck1] = useState(false);
   const [price1Kto2K, setPrice1Kto2K] = useState(false);
   const [price2Kto3K, setPrice2Kto3K] = useState(false);
   const [price3KAbove, setPrice3KAbove] = useState(false);
@@ -162,12 +169,22 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const [year2001ToPresent, setYear2001ToPresent] = useState(false);
   const { cars, loading } = useAppSelector((state) => state.carListings);
   const [listedCars, setListedCars] = useState(cars);
+  const [search, setSearch] = useState('');
   const { images } = useAppSelector((state) => state.home);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     dispatch(fetchCars());
   }, []);
+
+  useEffect(() => {
+    if (search) {
+      const filteredCars = listedCars.filter(
+        (car) => car.car.indexOf(search) !== -1
+      );
+      setListedCars(filteredCars);
+    }
+  }, [search]);
 
   const refreshCars = () => {
     setIsFetching(true);
@@ -193,10 +210,6 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
 
   const toggleOverlay = () => {
     setVisible(!visible);
-  };
-
-  const playgroundNavigate = () => {
-    toggleOverlay();
   };
 
   const clearState = () => {
@@ -228,31 +241,26 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   };
 
   const applyFilters = () => {
-    let isFilterApplied = false;
-    let filteredCars = cars;
+    let filteredCars = listedCars;
     if (carMake) {
       filteredCars = filteredCars.filter(
         (car) => car.car.toLowerCase() === carMake.toLowerCase()
       );
-      isFilterApplied = true;
     }
     if (carColor) {
       filteredCars = filteredCars.filter(
         (car) => car.car_color.toLowerCase() === carColor.toLowerCase()
       );
-      isFilterApplied = true;
     }
     if (carYear) {
       filteredCars = filteredCars.filter(
         (car) => car.car_model_year === Number(carYear)
       );
-      isFilterApplied = true;
     }
     if (year1900To2000) {
       filteredCars = filteredCars.filter(
         (car) => car.car_model_year >= 1900 && car.car_model_year <= 2000
       );
-      isFilterApplied = true;
     }
     if (year2001ToPresent) {
       filteredCars = filteredCars.filter(
@@ -260,7 +268,6 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           car.car_model_year >= 2001 &&
           car.car_model_year <= new Date().getFullYear()
       );
-      isFilterApplied = true;
     }
     if (price1Kto2K) {
       filteredCars = filteredCars.filter(
@@ -268,7 +275,6 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           Math.floor(Number(car.price.substring(1))) >= 1000 &&
           Math.floor(Number(car.price.substring(1))) <= 2000
       );
-      isFilterApplied = true;
     }
     if (price2Kto3K) {
       filteredCars = filteredCars.filter(
@@ -276,16 +282,18 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           Math.floor(Number(car.price.substring(1))) >= 2001 &&
           Math.floor(Number(car.price.substring(1))) <= 3000
       );
-      isFilterApplied = true;
     }
     if (price3KAbove) {
       filteredCars = filteredCars.filter(
         (car) => Math.floor(Number(car.price.substring(1))) >= 3001
       );
-      isFilterApplied = true;
     }
     setListedCars(filteredCars);
     toggleOverlay();
+  };
+
+  const updateSearch = (searchText: string) => {
+    setSearch(searchText);
   };
 
   const ListEmptyComponent = () => (
@@ -329,6 +337,20 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     <SafeAreaView style={styles.container}>
       {!visible ? (
         <>
+          <SearchBar
+            placeholder='Search Here...'
+            onChangeText={updateSearch}
+            value={search}
+            onClear={() => setListedCars(cars)}
+            inputContainerStyle={{ backgroundColor: '#fff' }}
+            containerStyle={{
+              backgroundColor: '#fff',
+              borderStyle: 'solid',
+              marginHorizontal: 5,
+              borderWidth: 1,
+              borderRadius: 5,
+            }}
+          />
           <FlatList
             numColumns={2}
             data={listedCars}
@@ -355,126 +377,123 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           </TouchableOpacity>
         </>
       ) : (
-        <SafeAreaView style={{ flex: 1, width: '100%' }}>
-          <Overlay
-            overlayStyle={{ width: '100%', height: '80%' }}
-            isVisible={visible}
-            onBackdropPress={toggleOverlay}
-          >
-            <HeaderRNE
-              leftComponent={
-                <TouchableOpacity onPress={playgroundNavigate}>
-                  <Icon type='font-awesome' name='close' color='white' />
+        <Overlay
+          fullScreen={true}
+          isVisible={visible}
+          onBackdropPress={toggleOverlay}
+          overlayStyle={styles.overlayStyle}
+        >
+          <HeaderRNE
+            leftComponent={
+              <TouchableOpacity
+                onPress={clearFilterValues}
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginTop: 5,
+                }}
+              >
+                <Text style={styles.textSecondary}>Clear</Text>
+              </TouchableOpacity>
+            }
+            rightComponent={
+              <View style={styles.headerRight}>
+                <TouchableOpacity
+                  style={{ marginLeft: 10 }}
+                  onPress={applyFilters}
+                >
+                  <Text style={styles.textSecondary}>Apply</Text>
                 </TouchableOpacity>
-              }
-              rightComponent={
-                <View style={styles.headerRight}>
-                  <TouchableOpacity
-                    style={{ marginLeft: 10 }}
-                    onPress={clearFilterValues}
-                  >
-                    <Text style={styles.textSecondary}>Clear</Text>
-                  </TouchableOpacity>
-                </View>
-              }
-              centerComponent={{
-                text: 'Filter Selection',
-                style: styles.heading,
-              }}
-            />
-            <View style={styles.filterContainer}>
-              <ListItem bottomDivider>
-                <ListItem.Content>
-                  <ListItem.Title>Car Make</ListItem.Title>
-                </ListItem.Content>
-                <ListItem.Content>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={onCarMakeChange}
-                    value={carMake}
-                  />
-                </ListItem.Content>
-              </ListItem>
-              <ListItem bottomDivider>
-                <ListItem.Content>
-                  <ListItem.Title>Car Color</ListItem.Title>
-                </ListItem.Content>
-                <ListItem.Content>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={onCarColorChange}
-                    value={carColor}
-                  />
-                </ListItem.Content>
-              </ListItem>
-              <ListItem bottomDivider>
-                <ListItem.Content>
-                  <ListItem.Title>Car Day Rental Price</ListItem.Title>
-                </ListItem.Content>
-                <ListItem.Content>
-                  <CheckBox
-                    center
-                    title='$1000 - $2000'
-                    checked={price1Kto2K}
-                    onPress={() => setPrice1Kto2K(!price1Kto2K)}
-                  />
-                  <CheckBox
-                    center
-                    title='$2001 - $3000'
-                    checked={price2Kto3K}
-                    onPress={() => setPrice2Kto3K(!price2Kto3K)}
-                  />
-                  <CheckBox
-                    center
-                    title='> $3000'
-                    checked={price3KAbove}
-                    onPress={() => setPrice3KAbove(!price3KAbove)}
-                  />
-                </ListItem.Content>
-              </ListItem>
-              <ListItem bottomDivider>
-                <ListItem.Content>
-                  <ListItem.Title>Year</ListItem.Title>
-                </ListItem.Content>
-                <ListItem.Content>
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={onChangeCarYear}
-                    value={carYear}
-                    placeholder='Enter Year'
-                    keyboardType='numeric'
-                  />
-                  <CheckBox
-                    center
-                    title='1900 - 2000'
-                    checked={year1900To2000}
-                    onPress={() => setYear1900To2000(!year1900To2000)}
-                  />
-                  <CheckBox
-                    center
-                    title='2001 - Present'
-                    checked={year2001ToPresent}
-                    onPress={() => setYear2001ToPresent(!year2001ToPresent)}
-                  />
-                </ListItem.Content>
-              </ListItem>
-              <Button
-                style={{ marginTop: 20 }}
-                icon={
-                  <Icon
-                    name='check'
-                    type='font-awesome'
-                    color='white'
-                    size={25}
-                    iconStyle={{ marginRight: 10 }}
-                  />
-                }
-                title='Apply filter'
-                onPress={applyFilters}
-              />
-            </View>
-          </Overlay>
-        </SafeAreaView>
+              </View>
+            }
+            centerComponent={{
+              text: 'Filter Selection',
+              style: styles.heading,
+            }}
+          />
+          <View style={styles.filterContainer}>
+            <ListItem bottomDivider>
+              <ListItem.Content>
+                <ListItem.Title>Car Make</ListItem.Title>
+              </ListItem.Content>
+              <ListItem.Content>
+                <TextInput
+                  style={styles.input}
+                  onChangeText={onCarMakeChange}
+                  value={carMake}
+                />
+              </ListItem.Content>
+            </ListItem>
+            <ListItem bottomDivider>
+              <ListItem.Content>
+                <ListItem.Title>Car Color</ListItem.Title>
+              </ListItem.Content>
+              <ListItem.Content>
+                <TextInput
+                  style={styles.input}
+                  onChangeText={onCarColorChange}
+                  value={carColor}
+                />
+              </ListItem.Content>
+            </ListItem>
+            <ListItem bottomDivider>
+              <ListItem.Content>
+                <ListItem.Title>Day Rental Price</ListItem.Title>
+              </ListItem.Content>
+              <ListItem.Content>
+                <CheckBox
+                  center
+                  containerStyle={styles.checkBoxContainer}
+                  title='$1000 - $2000'
+                  checked={price1Kto2K}
+                  onPress={() => setPrice1Kto2K(!price1Kto2K)}
+                />
+                <CheckBox
+                  center
+                  containerStyle={styles.checkBoxContainer}
+                  title='$2001 - $3001'
+                  checked={price2Kto3K}
+                  onPress={() => setPrice2Kto3K(!price2Kto3K)}
+                />
+                <CheckBox
+                  center
+                  containerStyle={styles.checkBoxContainer}
+                  title='> $3000'
+                  checked={price3KAbove}
+                  onPress={() => setPrice3KAbove(!price3KAbove)}
+                />
+              </ListItem.Content>
+            </ListItem>
+            <ListItem>
+              <ListItem.Content>
+                <ListItem.Title>Year</ListItem.Title>
+              </ListItem.Content>
+              <ListItem.Content>
+                <TextInput
+                  style={styles.input}
+                  onChangeText={onChangeCarYear}
+                  value={carYear}
+                  placeholder='Enter Year'
+                  keyboardType='numeric'
+                />
+                <CheckBox
+                  center
+                  containerStyle={styles.checkBoxContainer}
+                  title='1900 - 2000'
+                  checked={year1900To2000}
+                  onPress={() => setYear1900To2000(!year1900To2000)}
+                />
+                <CheckBox
+                  center
+                  containerStyle={styles.checkBoxContainer}
+                  title='2001 - Present'
+                  checked={year2001ToPresent}
+                  onPress={() => setYear2001ToPresent(!year2001ToPresent)}
+                />
+              </ListItem.Content>
+            </ListItem>
+          </View>
+        </Overlay>
       )}
     </SafeAreaView>
   );
