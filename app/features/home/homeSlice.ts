@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { api } from '../../api/apiConstants';
-import { fetchRandomImagesAPI } from '../../api/randomImagesApi';
 import {
   GENERAL_ERROR_MESSAGE,
   initialRandomImageData,
