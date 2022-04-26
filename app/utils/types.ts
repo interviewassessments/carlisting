@@ -8,6 +8,7 @@ export type CarStackParamList = {
   Listings: undefined;
   Details: {
     carDetails: object;
+    image: string;
   };
 };
 
