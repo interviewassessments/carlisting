@@ -8,10 +8,11 @@ const styles = StyleSheet.create({
   },
 });
 
-const DetailsScreen = () => {
+const DetailsScreen = ({route}: any) => {
+  const carDetails = route?.params?.carDetails;
   return (
     <View style={styles.container}>
-      <Text>Car Details Screen</Text>
+      <Text>{carDetails?.car}</Text>
     </View>
   );
 };

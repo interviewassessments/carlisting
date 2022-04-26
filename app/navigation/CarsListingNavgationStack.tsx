@@ -1,17 +1,21 @@
-import React from "react";
-import { CarStackParamList } from "../utils/types";
+import React from 'react';
+import { CarStackParamList } from '../utils/types';
 
-import { createStackNavigator } from "@react-navigation/stack";
-import ListingsScreen from "../features/carListings/ListingsScreen";
-import DetailsScreen from "../features/carListings/DetailsScreen";
+import { createStackNavigator } from '@react-navigation/stack';
+import ListingsScreen from '../features/carListings/ListingsScreen';
+import DetailsScreen from '../features/carListings/DetailsScreen';
 
 const Stack = createStackNavigator<CarStackParamList>();
 
-const CarsListingNavgationStack: React.FC<CarStackParamList> = () => {
+const CarsListingNavgationStack = () => {
   return (
-    <Stack.Navigator initialRouteName="Listings">
-      <Stack.Screen name="Listings" component={ListingsScreen} />
-      <Stack.Screen name="Details" component={DetailsScreen} />
+    <Stack.Navigator>
+      <Stack.Screen
+        options={{ headerShown: false }}
+        name='Listings'
+        component={ListingsScreen}
+      />
+      <Stack.Screen name='Details' component={DetailsScreen} />
     </Stack.Navigator>
   );
 };
