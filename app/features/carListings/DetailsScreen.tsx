@@ -1,5 +1,4 @@
-import { DefaultNavigatorOptions, ParamListBase } from '@react-navigation/native';
-import { Icon, ListItem, Image, Button } from '@rneui/themed';
+import { ListItem, Image, Button } from '@rneui/themed';
 import React from 'react';
 import {
   SafeAreaView,
@@ -9,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 
-import { appText } from '../../utils/constants';
+import { appText } from '../../utils/copyText';
 import { commonStyles } from '../../utils/styles';
 import { styles } from './styles';
 
@@ -21,7 +20,7 @@ const DetailsScreen = ({ route }: any) => {
       <ScrollView>
         <Image
           source={{ uri: image }}
-          containerStyle={{ aspectRatio: 1 }}
+          containerStyle={commonStyles.aspectRatioOne}
           PlaceholderContent={
             <ActivityIndicator color='#0000ff' style={styles.imageLoader} />
           }
