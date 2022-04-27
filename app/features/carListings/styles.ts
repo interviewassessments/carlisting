@@ -123,7 +123,7 @@ export const styles = StyleSheet.create({
     marginLeft: 0,
   },
   overlayStyle: {
-    flex: 2,
+    flex: 1,
     justifyContent: 'center',
     marginTop: Platform.OS === 'android' ? 0 : 50,
     paddingHorizontal: 0,
@@ -166,7 +166,7 @@ export const styles = StyleSheet.create({
   filterSafeArea: {
     borderBottomWidth: 1,
     marginHorizontal: 5,
-    borderBottomColor: 'rgba(0,0,0,0.2)',
+    borderBottomColor: 'rgba(0,0,0,0.2)'
   },
   sliderTrack: {
     height: 5,
@@ -177,8 +177,27 @@ export const styles = StyleSheet.create({
     width: 10,
     backgroundColor: 'transparent',
   },
-  sliderIcon: { 
-    bottom: 20, 
-    right: 10
+  sliderIcon: {
+    bottom: 20,
+    right: 10,
+  },
+  searchInputDDStyle: {
+    color: '#000',
+    padding: 10,
+    width: '100%',
+  },
+  ddStyleMainWrapper: {
+    paddingLeft: 10,
+  },
+  ddStyleInputGroup: { paddingRight: 10, borderWidth: 0.5 },
+  ddMenuStyle: {
+    marginTop: 10,
+    marginBottom: 10,
+    height: 50,
+    borderBottomWidth: 0,
+  },
+  ddListContainerStyle: {
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    paddingBottom: 10,
   },
 });

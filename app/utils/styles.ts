@@ -43,5 +43,11 @@ export const commonStyles = StyleSheet.create({
   },
   marginVertical20: {
       marginVertical: 20
+  },
+  marginTopZero: {
+    marginTop: 0
+  },
+  padding5: {
+    padding: 5
   }
 });

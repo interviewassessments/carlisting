@@ -40,6 +40,7 @@ import {
   generateUniqueColors,
   generateUniqueYears,
 } from '../../utils/generateUniqueValues';
+import MultiSelect from 'react-native-multiple-select';
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
 
@@ -103,6 +104,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     setIsFetching(true);
     dispatch(fetchCars());
     setIsFetching(false);
+    clearFilterValues();
   };
 
   if (loading) {
@@ -130,10 +132,11 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   };
 
   const applyFilters = () => {
+    console.log('sri rama', carMakeValue);
     let filteredCars = cars;
     if (carMakeValue.length) {
       filteredCars = filteredCars.filter((car) =>
-        carMakeValue.includes(car.car.toLowerCase())
+        carMakeValue.includes(car.car)
       );
     }
     if (priceValue && priceChanged) {
@@ -194,7 +197,19 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const onPriceValueChage = (price: number) => {
     setPriceValue(price);
     setPriceChanged(true);
-  }
+  };
+
+  const onSelectedCarMakeChange = (selectedItems: string[]) => {
+    setCarMakeValue(selectedItems);
+  };
+
+  const onSelectedCarColorChange = (selectedItems: string[]) => {
+    setColorValue(selectedItems);
+  };
+
+  const onSelectedCarYearChange = (selectedItems: string[]) => {
+    setYearValue(selectedItems);
+  };
 
   const ListEmptyComponent = () => (
     <View style={styles.noDataContainer}>
@@ -326,14 +341,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             }}
           />
           <View style={styles.filterContainer}>
-            <SafeAreaView
-              style={[
-                Platform.OS !== 'android' && {
-                  zIndex: 10,
-                },
-                styles.filterSafeArea,
-              ]}
-            >
+            <SafeAreaView style={[styles.filterSafeArea]}>
               <ListItem.Accordion
                 content={
                   <ListItem.Content>
@@ -345,34 +353,45 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 isExpanded={expanded}
                 onPress={() => {
                   setExpanded(!expanded);
+                  setCarPriceExpanded(false);
+                  setCarYearExpanded(false);
+                  setCarColorExpanded(false);
+                  setCarAvailabilityExpanded(false);
                 }}
+                containerStyle={{ marginBottom: 0 }}
               >
-                <ListItem style={commonStyles.marginVertical10}>
-                  <ListItem.Content>
-                    <DropDownPicker
-                      open={openDDMake}
-                      value={carMakeValue}
-                      items={carMakes}
-                      setOpen={setOpenDDMake}
-                      setValue={setCarMakeValue}
-                      setItems={setCarMakes}
-                      placeholder={appText.carMakePlaceholder}
-                      multiple
-                      mode='BADGE'
-                      onSelectItem={() => setOpenDDMake(false)}
-                    />
-                  </ListItem.Content>
-                </ListItem>
+                <SafeAreaView
+                  style={[
+                    commonStyles.marginVertical10,
+                    commonStyles.marginTopZero,
+                  ]}
+                >
+                  <MultiSelect
+                    items={carMakes}
+                    uniqueKey='label'
+                    onSelectedItemsChange={onSelectedCarMakeChange}
+                    selectedItems={carMakeValue}
+                    selectText='Pick Car Names'
+                    searchInputPlaceholderText='Search Car Names...'
+                    onChangeInput={(text) => console.log(text)}
+                    tagRemoveIconColor='red'
+                    tagTextColor='#000'
+                    selectedItemTextColor='#397af8'
+                    selectedItemIconColor='#397af8'
+                    itemTextColor='#000'
+                    displayKey='label'
+                    searchInputStyle={styles.searchInputDDStyle}
+                    hideSubmitButton
+                    styleRowList={commonStyles.padding5}
+                    styleMainWrapper={styles.ddStyleMainWrapper}
+                    styleInputGroup={styles.ddStyleInputGroup}
+                    styleDropdownMenu={styles.ddMenuStyle}
+                    styleListContainer={styles.ddListContainerStyle}
+                  />
+                </SafeAreaView>
               </ListItem.Accordion>
             </SafeAreaView>
-            <SafeAreaView
-              style={[
-                Platform.OS !== 'android' && {
-                  zIndex: 8,
-                },
-                styles.filterSafeArea,
-              ]}
-            >
+            <SafeAreaView style={styles.filterSafeArea}>
               <ListItem.Accordion
                 content={
                   <ListItem.Content>
@@ -384,6 +403,10 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 isExpanded={carPriceExpanded}
                 onPress={() => {
                   setCarPriceExpanded(!carPriceExpanded);
+                  setExpanded(false);
+                  setCarYearExpanded(false);
+                  setCarColorExpanded(false);
+                  setCarAvailabilityExpanded(false);
                 }}
               >
                 <SafeAreaView
@@ -424,14 +447,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 </SafeAreaView>
               </ListItem.Accordion>
             </SafeAreaView>
-            <SafeAreaView
-              style={[
-                Platform.OS !== 'android' && {
-                  zIndex: 6,
-                },
-                styles.filterSafeArea,
-              ]}
-            >
+            <SafeAreaView style={styles.filterSafeArea}>
               <ListItem.Accordion
                 content={
                   <ListItem.Content>
@@ -443,38 +459,44 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 isExpanded={carYearExpanded}
                 onPress={() => {
                   setCarYearExpanded(!carYearExpanded);
+                  setExpanded(false);
+                  setCarPriceExpanded(false);
+                  setCarColorExpanded(false);
+                  setCarAvailabilityExpanded(false);
                 }}
               >
                 <SafeAreaView
                   style={[
-                    commonStyles.marginVertical20,
-                    commonStyles.paddingHorizontal10,
+                    commonStyles.marginVertical10,
+                    commonStyles.marginTopZero,
                   ]}
                 >
-                  <DropDownPicker
-                    open={openDD}
-                    value={colorValue}
+                  <MultiSelect
                     items={colors}
-                    setOpen={setOpenDD}
-                    setValue={setColorValue}
-                    setItems={setColors}
-                    placeholder={appText.carColorPlaceholder}
-                    multiple
-                    mode='BADGE'
-                    badgeDotColors={colorValue[colorValue.length - 1]}
-                    onSelectItem={() => setOpenDD(false)}
+                    uniqueKey='label'
+                    onSelectedItemsChange={onSelectedCarColorChange}
+                    selectedItems={colorValue}
+                    selectText='Pick Car Color'
+                    searchInputPlaceholderText='Search Car Color Names...'
+                    onChangeInput={(text) => console.log(text)}
+                    tagRemoveIconColor='red'
+                    tagTextColor='#000'
+                    selectedItemTextColor='#397af8'
+                    selectedItemIconColor='#397af8'
+                    itemTextColor='#000'
+                    displayKey='label'
+                    searchInputStyle={styles.searchInputDDStyle}
+                    hideSubmitButton
+                    styleRowList={commonStyles.padding5}
+                    styleMainWrapper={styles.ddStyleMainWrapper}
+                    styleInputGroup={styles.ddStyleInputGroup}
+                    styleDropdownMenu={styles.ddMenuStyle}
+                    styleListContainer={styles.ddListContainerStyle}
                   />
                 </SafeAreaView>
               </ListItem.Accordion>
             </SafeAreaView>
-            <SafeAreaView
-              style={[
-                Platform.OS !== 'android' && {
-                  zIndex: 4,
-                },
-                styles.filterSafeArea,
-              ]}
-            >
+            <SafeAreaView style={[styles.filterSafeArea]}>
               <ListItem.Accordion
                 content={
                   <ListItem.Content>
@@ -486,34 +508,44 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 isExpanded={carColorExpanded}
                 onPress={() => {
                   setCarColorExpanded(!carColorExpanded);
+                  setExpanded(false);
+                  setCarPriceExpanded(false);
+                  setCarYearExpanded(false);
+                  setCarAvailabilityExpanded(false);
                 }}
               >
-                <ListItem style={commonStyles.marginVertical10}>
-                  <ListItem.Content>
-                    <DropDownPicker
-                      open={openDDYear}
-                      value={yearValue}
-                      items={years}
-                      setOpen={setOpenDDYear}
-                      setValue={setYearValue}
-                      setItems={setYears}
-                      placeholder={appText.yearPlaceholder}
-                      multiple
-                      mode='BADGE'
-                      onSelectItem={() => setOpenDDYear(false)}
-                    />
-                  </ListItem.Content>
-                </ListItem>
+                <SafeAreaView
+                  style={[
+                    commonStyles.marginVertical10,
+                    commonStyles.marginTopZero,
+                  ]}
+                >
+                  <MultiSelect
+                    items={years}
+                    uniqueKey='label'
+                    onSelectedItemsChange={onSelectedCarYearChange}
+                    selectedItems={yearValue}
+                    selectText='Pick Car Model Year'
+                    searchInputPlaceholderText='Search Car Years...'
+                    onChangeInput={(text) => console.log(text)}
+                    tagRemoveIconColor='red'
+                    tagTextColor='#000'
+                    selectedItemTextColor='#397af8'
+                    selectedItemIconColor='#397af8'
+                    itemTextColor='#000'
+                    displayKey='label'
+                    searchInputStyle={styles.searchInputDDStyle}
+                    hideSubmitButton
+                    styleRowList={commonStyles.padding5}
+                    styleMainWrapper={styles.ddStyleMainWrapper}
+                    styleInputGroup={styles.ddStyleInputGroup}
+                    styleDropdownMenu={styles.ddMenuStyle}
+                    styleListContainer={styles.ddListContainerStyle}
+                  />
+                </SafeAreaView>
               </ListItem.Accordion>
             </SafeAreaView>
-            <SafeAreaView
-              style={[
-                Platform.OS !== 'android' && {
-                  zIndex: 2,
-                },
-                styles.filterSafeArea,
-              ]}
-            >
+            <SafeAreaView style={styles.filterSafeArea}>
               <ListItem.Accordion
                 content={
                   <ListItem.Content>
@@ -525,6 +557,10 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                 isExpanded={carAvailabilityExpanded}
                 onPress={() => {
                   setCarAvailabilityExpanded(!carAvailabilityExpanded);
+                  setExpanded(false);
+                  setCarPriceExpanded(false);
+                  setCarYearExpanded(false);
+                  setCarColorExpanded(false);
                 }}
               >
                 <SafeAreaView style={commonStyles.marginVertical10}>
