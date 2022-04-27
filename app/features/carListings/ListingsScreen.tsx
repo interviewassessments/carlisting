@@ -6,9 +6,7 @@ import {
   ListRenderItem,
   ActivityIndicator,
   TouchableOpacity,
-  TextInput,
   SafeAreaView,
-  Platform,
 } from 'react-native';
 import {
   Image,
@@ -21,8 +19,8 @@ import {
   Slider,
   Icon,
 } from '@rneui/themed';
+import MultiSelect from 'react-native-multiple-select';
 import { color as colorTheme } from '@rneui/base';
-import DropDownPicker from 'react-native-dropdown-picker';
 import { CarData, CarStackParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -33,36 +31,26 @@ import { fetchCars } from './carListingsSlicer';
 import { generateRandomImage } from '../../utils/randomImageGenerator';
 import { styles } from './styles';
 import { commonStyles } from '../../utils/styles';
-import { appText } from '../../utils/constants';
+import { appText } from '../../utils/copyText';
 import {
   generateMinMaxPriceValues,
   generateUniqueCarMakes,
   generateUniqueColors,
   generateUniqueYears,
 } from '../../utils/generateUniqueValues';
-import MultiSelect from 'react-native-multiple-select';
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
 
 const ListingsScreen: React.FC<CarStackParamList> = () => {
+  const { cars, loading } = useAppSelector((state) => state.carListings);
+  const { images } = useAppSelector((state) => state.home);
+
   const [isFetching, setIsFetching] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [carMake, setCarMake] = useState('');
-  const [carColor, setCarColor] = useState('');
-  const [carYear, setCarYear] = useState('');
   const [availability, setAvailability] = useState(false);
-  const [price2Kto3K, setPrice2Kto3K] = useState(false);
-  const [price3KAbove, setPrice3KAbove] = useState(false);
-  const [year1900To2000, setYear1900To2000] = useState(false);
-  const [year2001ToPresent, setYear2001ToPresent] = useState(false);
-  const { cars, loading } = useAppSelector((state) => state.carListings);
   const [listedCars, setListedCars] = useState(cars);
   const [search, setSearch] = useState('');
-  const [open, setOpen] = React.useState(false);
-  const [selectedValue, setSelectedValue] = useState('white');
-  const [openDD, setOpenDD] = useState(false);
-  const [openDDYear, setOpenDDYear] = useState(false);
-  const [openDDMake, setOpenDDMake] = useState(false);
+  const [open, setOpen] = useState(false);
   const [colorValue, setColorValue] = useState<string[]>([]);
   const [yearValue, setYearValue] = useState<string[]>([]);
   const [carMakeValue, setCarMakeValue] = useState<string[]>([]);
@@ -72,22 +60,21 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const [carYearExpanded, setCarYearExpanded] = useState(false);
   const [carAvailabilityExpanded, setCarAvailabilityExpanded] = useState(false);
   const minMaxPrices = generateMinMaxPriceValues(cars);
-  const minimumPrice = Math.floor(Number(minMaxPrices.minimum.substring(1)));
-  const maximumPrice = Math.floor(Number(minMaxPrices.maximum.substring(1)));
+  const minimumPrice = Math.floor(Number(minMaxPrices?.minimum?.substring(1)));
+  const maximumPrice = Math.floor(Number(minMaxPrices?.maximum?.substring(1)));
   const [priceValue, setPriceValue] = useState(minimumPrice);
   const [priceChanged, setPriceChanged] = useState(false);
-  const { images } = useAppSelector((state) => state.home);
+
   const dispatch = useAppDispatch();
-
-  const [colors, setColors] = useState(generateUniqueColors(cars));
-  const [years, setYears] = useState(generateUniqueYears(cars));
-  const [carMakes, setCarMakes] = useState(generateUniqueCarMakes(cars));
-
+  const colors = generateUniqueColors(cars);
+  const years = generateUniqueYears(cars);
+  const carMakes = generateUniqueCarMakes(cars);
   const imagesArray: string[] = [];
   images?.map((image) => {
     imagesArray.push(image.download_url);
   });
 
+  // Search useEffect to filter the cars based on name
   useEffect(() => {
     if (search) {
       const filteredCars = cars.filter(
@@ -100,6 +87,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     }
   }, [search, cars]);
 
+  // Pull to refresh to get the latest cars data from fake api as provided in resources section
   const refreshCars = () => {
     setIsFetching(true);
     dispatch(fetchCars());
@@ -107,6 +95,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     clearFilterValues();
   };
 
+  // Showing loading indicator to get the list of cars from API
   if (loading) {
     return (
       <ActivityIndicator style={styles.loader} color='#0000ff' size='large' />
@@ -127,12 +116,10 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   };
 
   const clearFilterValues = () => {
-    // clear filter value state
     clearState();
   };
 
   const applyFilters = () => {
-    console.log('sri rama', carMakeValue);
     let filteredCars = cars;
     if (carMakeValue.length) {
       filteredCars = filteredCars.filter((car) =>
@@ -173,7 +160,6 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   };
 
   const updateSearch = (search: string) => {
-    console.log('search', search);
     setSearch(search);
   };
 
@@ -182,6 +168,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     setOpen(!open);
   };
 
+  // Methods used for Price Slider
   const interpolate = (start: number, end: number) => {
     let k = (priceValue - 0) / 10; // 0 =>min  && 10 => MAX
     return Math.ceil((1 - k) * start + k * end) % 256;
@@ -211,6 +198,47 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     setYearValue(selectedItems);
   };
 
+  const onCarMakeExpandPress = () => {
+    setExpanded(!expanded);
+    setCarPriceExpanded(false);
+    setCarYearExpanded(false);
+    setCarColorExpanded(false);
+    setCarAvailabilityExpanded(false);
+  };
+
+  const onCarPriceExpandPress = () => {
+    setCarPriceExpanded(!carPriceExpanded);
+    setExpanded(false);
+    setCarYearExpanded(false);
+    setCarColorExpanded(false);
+    setCarAvailabilityExpanded(false);
+  };
+
+  const onCarColorExpandPress = () => {
+    setCarYearExpanded(!carYearExpanded);
+    setExpanded(false);
+    setCarPriceExpanded(false);
+    setCarColorExpanded(false);
+    setCarAvailabilityExpanded(false);
+  };
+
+  const onCarYearExpandPress = () => {
+    setCarColorExpanded(!carColorExpanded);
+    setExpanded(false);
+    setCarPriceExpanded(false);
+    setCarYearExpanded(false);
+    setCarAvailabilityExpanded(false);
+  };
+
+  const onCarAvaliabilityExpandPress = () => {
+    setCarAvailabilityExpanded(!carAvailabilityExpanded);
+    setExpanded(false);
+    setCarPriceExpanded(false);
+    setCarYearExpanded(false);
+    setCarColorExpanded(false);
+  };
+
+  // Empty Data Component
   const ListEmptyComponent = () => (
     <View style={styles.noDataContainer}>
       <Text style={styles.noData}>{appText.noData}</Text>
@@ -220,7 +248,9 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const Car = ({ carDetails }: any) => {
     const navigation = useNavigation<ListingScreenProp>();
     const randomImage = generateRandomImage(imagesArray);
-    const availability = carDetails.availability ? 'Available' : 'Sold out';
+    const availability = carDetails.availability
+      ? appText.available
+      : appText.soldout;
     return (
       <SafeAreaView style={styles.imageContainer}>
         <TouchableOpacity
@@ -266,6 +296,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     <ReacNavigationSafeView style={styles.container}>
       {!visible ? (
         <>
+          {/* Search Bar */}
           <SearchBar
             placeholder={appText.searchPlaceholder}
             onChangeText={updateSearch}
@@ -275,6 +306,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             containerStyle={styles.searchBarContainer}
             theme={colorTheme()}
           />
+          {/* Flatlist to render the cars from the API */}
           <FlatList
             numColumns={2}
             data={listedCars}
@@ -285,6 +317,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             onRefresh={refreshCars}
             ListEmptyComponent={ListEmptyComponent}
           />
+          {/* Filter Icon using SpeedDial using React Native Elements */}
           <SpeedDial
             isOpen={open}
             icon={{ name: 'add', color: '#fff' }}
@@ -309,6 +342,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           </SpeedDial>
         </>
       ) : (
+        // Overlay Component to Show Filters
         <Overlay
           fullScreen={true}
           isVisible={visible}
@@ -351,13 +385,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                   </ListItem.Content>
                 }
                 isExpanded={expanded}
-                onPress={() => {
-                  setExpanded(!expanded);
-                  setCarPriceExpanded(false);
-                  setCarYearExpanded(false);
-                  setCarColorExpanded(false);
-                  setCarAvailabilityExpanded(false);
-                }}
+                onPress={onCarMakeExpandPress}
                 containerStyle={{ marginBottom: 0 }}
               >
                 <SafeAreaView
@@ -372,7 +400,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                     onSelectedItemsChange={onSelectedCarMakeChange}
                     selectedItems={carMakeValue}
                     selectText='Pick Car Names'
-                    searchInputPlaceholderText='Search Car Names...'
+                    searchInputPlaceholderText={appText.carMakePlaceholder}
                     onChangeInput={(text) => console.log(text)}
                     tagRemoveIconColor='red'
                     tagTextColor='#000'
@@ -401,13 +429,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                   </ListItem.Content>
                 }
                 isExpanded={carPriceExpanded}
-                onPress={() => {
-                  setCarPriceExpanded(!carPriceExpanded);
-                  setExpanded(false);
-                  setCarYearExpanded(false);
-                  setCarColorExpanded(false);
-                  setCarAvailabilityExpanded(false);
-                }}
+                onPress={onCarPriceExpandPress}
               >
                 <SafeAreaView
                   style={[
@@ -437,13 +459,20 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                       ),
                     }}
                   />
-                  <Text
-                    style={[commonStyles.subTitle, commonStyles.paddingTop10]}
-                  >{`Price Range Selected : ${
-                    minimumPrice === priceValue
-                      ? `$${minimumPrice}`
-                      : `$${minimumPrice} - $${priceValue}`
-                  }`}</Text>
+                  <View style={commonStyles.rowFlex}>
+                    <Text
+                      style={[commonStyles.subTitle, commonStyles.paddingTop10, commonStyles.paddingRight10]}
+                    >
+                      {appText.priceRange}
+                    </Text>
+                    <Text
+                      style={[commonStyles.title, commonStyles.themeColor]}
+                    >{`${
+                      minimumPrice === priceValue
+                        ? `$${minimumPrice}`
+                        : `$${minimumPrice} - $${priceValue}`
+                    }`}</Text>
+                  </View>
                 </SafeAreaView>
               </ListItem.Accordion>
             </SafeAreaView>
@@ -457,13 +486,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                   </ListItem.Content>
                 }
                 isExpanded={carYearExpanded}
-                onPress={() => {
-                  setCarYearExpanded(!carYearExpanded);
-                  setExpanded(false);
-                  setCarPriceExpanded(false);
-                  setCarColorExpanded(false);
-                  setCarAvailabilityExpanded(false);
-                }}
+                onPress={onCarColorExpandPress}
               >
                 <SafeAreaView
                   style={[
@@ -477,7 +500,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                     onSelectedItemsChange={onSelectedCarColorChange}
                     selectedItems={colorValue}
                     selectText='Pick Car Color'
-                    searchInputPlaceholderText='Search Car Color Names...'
+                    searchInputPlaceholderText={appText.carColorPlaceholder}
                     onChangeInput={(text) => console.log(text)}
                     tagRemoveIconColor='red'
                     tagTextColor='#000'
@@ -506,13 +529,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                   </ListItem.Content>
                 }
                 isExpanded={carColorExpanded}
-                onPress={() => {
-                  setCarColorExpanded(!carColorExpanded);
-                  setExpanded(false);
-                  setCarPriceExpanded(false);
-                  setCarYearExpanded(false);
-                  setCarAvailabilityExpanded(false);
-                }}
+                onPress={onCarYearExpandPress}
               >
                 <SafeAreaView
                   style={[
@@ -526,7 +543,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                     onSelectedItemsChange={onSelectedCarYearChange}
                     selectedItems={yearValue}
                     selectText='Pick Car Model Year'
-                    searchInputPlaceholderText='Search Car Years...'
+                    searchInputPlaceholderText={appText.yearPlaceholder}
                     onChangeInput={(text) => console.log(text)}
                     tagRemoveIconColor='red'
                     tagTextColor='#000'
@@ -555,18 +572,12 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
                   </ListItem.Content>
                 }
                 isExpanded={carAvailabilityExpanded}
-                onPress={() => {
-                  setCarAvailabilityExpanded(!carAvailabilityExpanded);
-                  setExpanded(false);
-                  setCarPriceExpanded(false);
-                  setCarYearExpanded(false);
-                  setCarColorExpanded(false);
-                }}
+                onPress={onCarAvaliabilityExpandPress}
               >
                 <SafeAreaView style={commonStyles.marginVertical10}>
                   <CheckBox
                     containerStyle={styles.checkBoxContainer}
-                    title='Availability'
+                    title={appText.available}
                     checked={availability}
                     onPress={() => setAvailability(!availability)}
                   />

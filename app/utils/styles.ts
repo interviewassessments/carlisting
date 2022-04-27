@@ -36,18 +36,28 @@ export const commonStyles = StyleSheet.create({
     paddingTop: 10,
   },
   paddingVertical10: {
-      paddingVertical: 10
+    paddingVertical: 10,
   },
   marginVertical10: {
-      marginVertical: 10
+    marginVertical: 10,
   },
   marginVertical20: {
-      marginVertical: 20
+    marginVertical: 20,
   },
   marginTopZero: {
-    marginTop: 0
+    marginTop: 0,
   },
   padding5: {
-    padding: 5
+    padding: 5,
+  },
+  aspectRatioOne: { aspectRatio: 1 },
+  themeColor: {
+    color: '#397af8'
+  },
+  paddingRight10: {
+    paddingRight: 10
+  },
+  rowFlex: {
+    flexDirection: 'row'
   }
 });
