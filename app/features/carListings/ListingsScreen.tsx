@@ -1,15 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   ListRenderItem,
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
-  Platform,
+  SafeAreaView,
 } from 'react-native';
 import {
   Icon,
@@ -23,10 +22,14 @@ import {
 import { CarData, CarStackParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView as ReacNavigationSafeView } from 'react-native-safe-area-context';
+
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchCars } from './carListingsSlicer';
 import { generateRandomImage } from '../../utils/randomImageGenerator';
 import { styles } from './styles';
+import { commonStyles } from '../../utils/styles';
+import { appText } from '../../utils/constants';
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
 
@@ -50,13 +53,14 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   useEffect(() => {
     if (search) {
       const filteredCars = cars.filter(
-        (car) => car.car.indexOf(search) !== -1
+        (carItem) =>
+          carItem.car.toLowerCase().indexOf(search.toLowerCase()) !== -1
       );
       setListedCars(filteredCars);
     } else {
       setListedCars(cars);
     }
-  }, [search]);
+  }, [search, cars]);
 
   const refreshCars = () => {
     setIsFetching(true);
@@ -71,7 +75,6 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   }
 
   const imagesArray: string[] = [];
-
   images?.map((image) => {
     imagesArray.push(image.download_url);
   });
@@ -113,7 +116,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   };
 
   const applyFilters = () => {
-    let filteredCars = listedCars;
+    let filteredCars = cars;
     if (carMake) {
       filteredCars = filteredCars.filter(
         (car) => car.car.toLowerCase() === carMake.toLowerCase()
@@ -165,19 +168,20 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   };
 
   const updateSearch = (search: string) => {
-    console.log('sri rama', search);
+    console.log('search', search);
     setSearch(search);
   };
 
   const ListEmptyComponent = () => (
     <View style={styles.noDataContainer}>
-      <Text style={styles.noData}>No Data Found</Text>
+      <Text style={styles.noData}>{appText.noData}</Text>
     </View>
   );
 
   const Car = ({ carDetails }: any) => {
     const navigation = useNavigation<ListingScreenProp>();
     const randomImage = generateRandomImage(imagesArray);
+    const availability = carDetails.availability ? 'Available' : 'Sold out'
     return (
       <SafeAreaView style={styles.imageContainer}>
         <TouchableOpacity
@@ -197,8 +201,10 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           />
         </TouchableOpacity>
         <View>
-          <Text style={styles.text}>{carDetails.car}</Text>
-          <Text style={styles.text}>{`${carDetails.price}/day`}</Text>
+          <Text style={commonStyles.title}>{carDetails.car}</Text>
+          <Text style={commonStyles.subTitle}>{`${carDetails.price}/day`}</Text>
+          <Text style={commonStyles.subTitle}>{carDetails.car_model_year}</Text>
+          <Text style={[commonStyles.subTitle, !carDetails.availability ? commonStyles.danger : commonStyles.success]}>{availability}</Text>
         </View>
       </SafeAreaView>
     );
@@ -209,22 +215,16 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ReacNavigationSafeView style={styles.container}>
       {!visible ? (
         <>
           <SearchBar
-            placeholder='Search Here...'
+            placeholder={appText.searchPlaceholder}
             onChangeText={updateSearch}
             value={search}
             onClear={() => setListedCars(cars)}
-            inputContainerStyle={{ backgroundColor: '#fff' }}
-            containerStyle={{
-              backgroundColor: '#fff',
-              borderStyle: 'solid',
-              marginHorizontal: 5,
-              borderWidth: 1,
-              borderRadius: 5,
-            }}
+            inputContainerStyle={styles.searchInput}
+            containerStyle={styles.searchBarContainer}
           />
           <FlatList
             numColumns={2}
@@ -237,18 +237,13 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             ListEmptyComponent={ListEmptyComponent}
           />
           <TouchableOpacity
-            activeOpacity={0.7}
             onPress={onPressFilters}
             style={styles.touchableOpacityStyle}
           >
-            <ListItem style={styles.floatingButtonStyle}>
-              <ListItem.Content style={{ flexDirection: 'row' }}>
-                <Icon type='font-awesome' name='filter' color='black' />
-                <ListItem.Title style={{ paddingLeft: 5 }}>
-                  Filters
-                </ListItem.Title>
-              </ListItem.Content>
-            </ListItem>
+            <View style={styles.floatingButtonStyle}>
+              <Icon type='font-awesome' name='filter' color='white' />
+              <Text style={commonStyles.textWhite}>{appText.filters}</Text>
+            </View>
           </TouchableOpacity>
         </>
       ) : (
@@ -259,61 +254,60 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           overlayStyle={styles.overlayStyle}
         >
           <HeaderRNE
+            containerStyle={commonStyles.paddingHorizontal10}
             leftComponent={
               <TouchableOpacity
                 onPress={clearFilterValues}
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: 5,
-                }}
+                style={styles.overlayHeaderLeft}
               >
-                <Text style={styles.textSecondary}>Clear</Text>
+                <Text style={styles.textSecondary}>{appText.clear}</Text>
               </TouchableOpacity>
             }
             rightComponent={
               <View style={styles.headerRight}>
                 <TouchableOpacity
-                  style={{ marginLeft: 10 }}
+                  style={commonStyles.marginLeft10}
                   onPress={applyFilters}
                 >
-                  <Text style={styles.textSecondary}>Apply</Text>
+                  <Text style={styles.textSecondary}>{appText.apply}</Text>
                 </TouchableOpacity>
               </View>
             }
             centerComponent={{
-              text: 'Filter Selection',
+              text: appText.filterHeading,
               style: styles.heading,
             }}
           />
           <View style={styles.filterContainer}>
             <ListItem bottomDivider>
               <ListItem.Content>
-                <ListItem.Title>Car Make</ListItem.Title>
+                <ListItem.Title>{appText.carMake}</ListItem.Title>
               </ListItem.Content>
               <ListItem.Content>
                 <TextInput
                   style={styles.input}
                   onChangeText={onCarMakeChange}
                   value={carMake}
+                  placeholder={appText.carMakePlaceholder}
                 />
               </ListItem.Content>
             </ListItem>
             <ListItem bottomDivider>
               <ListItem.Content>
-                <ListItem.Title>Car Color</ListItem.Title>
+                <ListItem.Title>{appText.carColor}</ListItem.Title>
               </ListItem.Content>
               <ListItem.Content>
                 <TextInput
                   style={styles.input}
                   onChangeText={onCarColorChange}
                   value={carColor}
+                  placeholder={appText.carColorPlaceholder}
                 />
               </ListItem.Content>
             </ListItem>
             <ListItem bottomDivider>
               <ListItem.Content>
-                <ListItem.Title>Day Rental Price</ListItem.Title>
+                <ListItem.Title>{appText.dayRentalPrice}</ListItem.Title>
               </ListItem.Content>
               <ListItem.Content>
                 <CheckBox
@@ -341,14 +335,14 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             </ListItem>
             <ListItem>
               <ListItem.Content>
-                <ListItem.Title>Year</ListItem.Title>
+                <ListItem.Title>{appText.year}</ListItem.Title>
               </ListItem.Content>
               <ListItem.Content>
                 <TextInput
                   style={styles.input}
                   onChangeText={onChangeCarYear}
                   value={carYear}
-                  placeholder='Enter Year'
+                  placeholder={appText.yearPlaceholder}
                   keyboardType='numeric'
                 />
                 <CheckBox
@@ -370,7 +364,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           </View>
         </Overlay>
       )}
-    </SafeAreaView>
+    </ReacNavigationSafeView>
   );
 };
 

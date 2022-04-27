@@ -1,24 +1,24 @@
+import { DefaultNavigatorOptions, ParamListBase } from '@react-navigation/native';
 import { Icon, ListItem, Image, Button } from '@rneui/themed';
 import React from 'react';
 import {
-  Text,
-  StyleSheet,
   SafeAreaView,
   ActivityIndicator,
   View,
   ScrollView,
   Alert,
 } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { appText } from '../../utils/constants';
+import { commonStyles } from '../../utils/styles';
 import { styles } from './styles';
 
 const DetailsScreen = ({ route }: any) => {
   const carDetails = route?.params?.carDetails;
   const image = route?.params?.image;
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 10 }}>
+    <SafeAreaView style={styles.detailsContainer}>
+      <ScrollView>
         <Image
           source={{ uri: image }}
           containerStyle={{ aspectRatio: 1 }}
@@ -26,63 +26,39 @@ const DetailsScreen = ({ route }: any) => {
             <ActivityIndicator color='#0000ff' style={styles.imageLoader} />
           }
         />
-        <ListItem containerStyle={{ paddingHorizontal: 0 }}>
+        <ListItem containerStyle={commonStyles.paddingHorizontal10}>
           <ListItem.Content>
-            <ListItem.Title
-              style={{ fontSize: 20, paddingBottom: 5, fontWeight: '700' }}
-            >
+            <ListItem.Title style={commonStyles.title}>
               {carDetails.car}
             </ListItem.Title>
-            <ListItem.Subtitle style={{ fontSize: 16, paddingBottom: 5 }}>
+            <ListItem.Subtitle style={commonStyles.subTitle}>
               {carDetails.car_model}
             </ListItem.Subtitle>
             <ListItem.Subtitle
-              style={{ fontSize: 16, paddingBottom: 5 }}
+              style={commonStyles.subTitle}
             >{`${carDetails.price} / day`}</ListItem.Subtitle>
-            <ListItem.Subtitle style={{ fontSize: 16, paddingBottom: 5 }}>
+            <ListItem.Subtitle style={commonStyles.subTitle}>
               {carDetails.car_model_year}
             </ListItem.Subtitle>
           </ListItem.Content>
         </ListItem>
-        <ListItem containerStyle={{ paddingHorizontal: 0 }}>
+        <ListItem containerStyle={commonStyles.paddingHorizontal10}>
           <ListItem.Content>
-            <ListItem.Title
-              style={{ fontSize: 20, paddingBottom: 5, fontWeight: '700' }}
-            >
-              Details about the rental
+            <ListItem.Title style={commonStyles.title}>
+              {appText.details.text}
             </ListItem.Title>
-            <ListItem.Subtitle
-              style={{ fontSize: 16, paddingBottom: 5, textAlign: 'left' }}
-            >
-              Car Rental. In the U.S., compact cars will be rented when
-              available, and comparable models will be rented when traveling
-              internationally. All optional insurance for rental cars while on
-              L-3 business in the U.S. and Canada, are not reimbursable.
-              Optional collision insurance purchased internationally is
-              acceptable where obligatory. Fines for parking or traffic
-              violations are not reimbursable expenses whether incurred in a
-              rental car or while using one’s personal automobile for L-3
-              business.
+            <ListItem.Subtitle style={commonStyles.subTitle}>
+              {appText.details.sampleDesc}
             </ListItem.Subtitle>
           </ListItem.Content>
         </ListItem>
       </ScrollView>
-      <View
-        style={{
-          position: 'absolute',
-          width: '100%',
-          bottom: 0,
-          marginHorizontal: 5,
-          backgroundColor: '#fff',
-        }}
-      >
+      <View style={styles.bookingBtnContainer}>
         <Button
-          buttonStyle={{
-            height: 50,
-            marginTop: 10,
-          }}
-          title='Book'
-          onPress={() => Alert.alert('Booking flow goes from here')}
+          buttonStyle={styles.bookingBtn}
+          title={appText.details.btnBook}
+          disabled={!carDetails.availability}
+          onPress={() => Alert.alert(appText.details.bookBtnAlertText)}
         />
       </View>
     </SafeAreaView>
