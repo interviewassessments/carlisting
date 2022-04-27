@@ -7,7 +7,7 @@ export const generateUniqueColors = (cars: CarData[]) => {
   for (let color of uniqueColorValues) {
     colorValuesFromSet.push({
       label: color,
-      value: color.toLowerCase(),
+      value: color,
     });
   }
   return colorValuesFromSet;
@@ -34,7 +34,7 @@ export const generateUniqueCarMakes = (cars: CarData[]) => {
   for (let make of uniqueYearValues) {
     makeValuesFromSet.push({
       label: make,
-      value: make.toLowerCase(),
+      value: make,
     });
   }
   return makeValuesFromSet;
