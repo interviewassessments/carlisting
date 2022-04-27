@@ -3,7 +3,7 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop: 10
+    marginTop: 10,
   },
   detailsContainer: {
     flex: 1,
@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     aspectRatio: 1,
     flex: 1,
     borderRadius: 10,
-    borderWidth: 0
+    borderWidth: 0,
   },
   list: {
     width: '100%',
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#397af8',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10
+    borderRadius: 10,
   },
   textPrimary: {
     marginVertical: 20,
@@ -82,7 +82,7 @@ export const styles = StyleSheet.create({
   },
   filterContainer: {
     flex: 1,
-    marginRight: 10
+    marginRight: 10,
   },
   input: {
     height: 40,
@@ -120,13 +120,14 @@ export const styles = StyleSheet.create({
   },
   checkBoxContainer: {
     marginRight: 0,
+    marginLeft: 0,
   },
   overlayStyle: {
     flex: 2,
     justifyContent: 'center',
     marginTop: Platform.OS === 'android' ? 0 : 50,
     paddingHorizontal: 0,
-    paddingVertical: 0
+    paddingVertical: 0,
   },
   searchBarContainer: {
     backgroundColor: '#fff',
@@ -134,7 +135,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: 5,
     borderWidth: 1,
     borderRadius: 5,
-    marginBottom: 5
+    marginBottom: 5,
   },
   searchInput: {
     backgroundColor: '#fff',
@@ -161,5 +162,23 @@ export const styles = StyleSheet.create({
   bookingBtn: {
     height: 50,
     marginTop: 10,
-  }
+  },
+  filterSafeArea: {
+    borderBottomWidth: 1,
+    marginHorizontal: 5,
+    borderBottomColor: 'rgba(0,0,0,0.2)',
+  },
+  sliderTrack: {
+    height: 5,
+    backgroundColor: 'transparent',
+  },
+  sliderThumb: {
+    height: 10,
+    width: 10,
+    backgroundColor: 'transparent',
+  },
+  sliderIcon: { 
+    bottom: 20, 
+    right: 10
+  },
 });

@@ -18,18 +18,30 @@ export const commonStyles = StyleSheet.create({
     fontWeight: '600',
   },
   paddingHorizontal10: {
-      paddingHorizontal: 10
+    paddingHorizontal: 10,
   },
   textWhite: {
-      color: '#fff'
+    color: '#fff',
   },
   marginHorizontalZero: {
-      marginHorizontal: 0
+    marginHorizontal: 0,
   },
   danger: {
-      color: 'red'
+    color: 'red',
   },
   success: {
-      color: 'green'
+    color: 'green',
+  },
+  paddingTop10: {
+    paddingTop: 10,
+  },
+  paddingVertical10: {
+      paddingVertical: 10
+  },
+  marginVertical10: {
+      marginVertical: 10
+  },
+  marginVertical20: {
+      marginVertical: 20
   }
 });
