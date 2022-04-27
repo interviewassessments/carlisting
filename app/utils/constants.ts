@@ -28,6 +28,7 @@ export const appText = {
   dayRentalPrice: 'Day Rental Price',
   year: 'Year',
   yearPlaceholder: 'Enter Year',
+  carAvailability: 'Car Availability',
   details: {
     text: 'Details about the rental',
     sampleDesc: `Car Rental. In the U.S., compact cars will be rented when available, and comparable models will be rented when traveling internationally. All optional insurance for rental cars while on L-3 business in the U.S. and Canada, are not reimbursable. Optional collision insurance purchased internationally is acceptable where obligatory. Fines for parking or traffic violations are not reimbursable expenses whether incurred in a rental car or while using one’s personal automobile for L-3 business.`,

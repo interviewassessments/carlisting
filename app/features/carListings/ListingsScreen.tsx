@@ -2,23 +2,27 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   ListRenderItem,
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import {
-  Icon,
   Image,
   Overlay,
   Header as HeaderRNE,
   ListItem,
   CheckBox,
   SearchBar,
+  SpeedDial,
+  Slider,
+  Icon,
 } from '@rneui/themed';
+import { color as colorTheme } from '@rneui/base';
+import DropDownPicker from 'react-native-dropdown-picker';
 import { CarData, CarStackParamList } from '../../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -30,6 +34,12 @@ import { generateRandomImage } from '../../utils/randomImageGenerator';
 import { styles } from './styles';
 import { commonStyles } from '../../utils/styles';
 import { appText } from '../../utils/constants';
+import {
+  generateMinMaxPriceValues,
+  generateUniqueCarMakes,
+  generateUniqueColors,
+  generateUniqueYears,
+} from '../../utils/generateUniqueValues';
 
 type ListingScreenProp = StackNavigationProp<CarStackParamList, 'Listings'>;
 
@@ -39,7 +49,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const [carMake, setCarMake] = useState('');
   const [carColor, setCarColor] = useState('');
   const [carYear, setCarYear] = useState('');
-  const [price1Kto2K, setPrice1Kto2K] = useState(false);
+  const [availability, setAvailability] = useState(false);
   const [price2Kto3K, setPrice2Kto3K] = useState(false);
   const [price3KAbove, setPrice3KAbove] = useState(false);
   const [year1900To2000, setYear1900To2000] = useState(false);
@@ -47,8 +57,35 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const { cars, loading } = useAppSelector((state) => state.carListings);
   const [listedCars, setListedCars] = useState(cars);
   const [search, setSearch] = useState('');
+  const [open, setOpen] = React.useState(false);
+  const [selectedValue, setSelectedValue] = useState('white');
+  const [openDD, setOpenDD] = useState(false);
+  const [openDDYear, setOpenDDYear] = useState(false);
+  const [openDDMake, setOpenDDMake] = useState(false);
+  const [colorValue, setColorValue] = useState<string[]>([]);
+  const [yearValue, setYearValue] = useState<string[]>([]);
+  const [carMakeValue, setCarMakeValue] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState(false);
+  const [carColorExpanded, setCarColorExpanded] = useState(false);
+  const [carPriceExpanded, setCarPriceExpanded] = useState(false);
+  const [carYearExpanded, setCarYearExpanded] = useState(false);
+  const [carAvailabilityExpanded, setCarAvailabilityExpanded] = useState(false);
+  const minMaxPrices = generateMinMaxPriceValues(cars);
+  const minimumPrice = Math.floor(Number(minMaxPrices.minimum.substring(1)));
+  const maximumPrice = Math.floor(Number(minMaxPrices.maximum.substring(1)));
+  const [priceValue, setPriceValue] = useState(minimumPrice);
+  const [priceChanged, setPriceChanged] = useState(false);
   const { images } = useAppSelector((state) => state.home);
   const dispatch = useAppDispatch();
+
+  const [colors, setColors] = useState(generateUniqueColors(cars));
+  const [years, setYears] = useState(generateUniqueYears(cars));
+  const [carMakes, setCarMakes] = useState(generateUniqueCarMakes(cars));
+
+  const imagesArray: string[] = [];
+  images?.map((image) => {
+    imagesArray.push(image.download_url);
+  });
 
   useEffect(() => {
     if (search) {
@@ -74,28 +111,17 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     );
   }
 
-  const imagesArray: string[] = [];
-  images?.map((image) => {
-    imagesArray.push(image.download_url);
-  });
-
-  const onPressFilters = () => {
-    setVisible(true);
-  };
-
   const toggleOverlay = () => {
     setVisible(!visible);
   };
 
   const clearState = () => {
-    setCarMake('');
-    setCarColor('');
-    setPrice1Kto2K(false);
-    setPrice2Kto3K(false);
-    setPrice3KAbove(false);
-    setCarYear('');
-    setYear1900To2000(false);
-    setYear2001ToPresent(false);
+    setColorValue([]);
+    setYearValue([]);
+    setCarMakeValue([]);
+    setPriceValue(minimumPrice);
+    setAvailability(false);
+    setPriceChanged(false);
   };
 
   const clearFilterValues = () => {
@@ -103,74 +129,72 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
     clearState();
   };
 
-  const onCarMakeChange = (value: string) => {
-    setCarMake(value);
-  };
-
-  const onCarColorChange = (value: string) => {
-    setCarColor(value);
-  };
-
-  const onChangeCarYear = (value: string) => {
-    setCarYear(value);
-  };
-
   const applyFilters = () => {
     let filteredCars = cars;
-    if (carMake) {
-      filteredCars = filteredCars.filter(
-        (car) => car.car.toLowerCase() === carMake.toLowerCase()
+    if (carMakeValue.length) {
+      filteredCars = filteredCars.filter((car) =>
+        carMakeValue.includes(car.car.toLowerCase())
       );
     }
-    if (carColor) {
-      filteredCars = filteredCars.filter(
-        (car) => car.car_color.toLowerCase() === carColor.toLowerCase()
+    if (priceValue && priceChanged) {
+      if (priceValue === minimumPrice) {
+        filteredCars = filteredCars.filter(
+          (car) => Math.floor(Number(car.price.substring(1))) === priceValue
+        );
+      } else {
+        filteredCars = filteredCars.filter(
+          (car) =>
+            Math.floor(Number(car.price.substring(1))) >= minimumPrice &&
+            Math.floor(Number(car.price.substring(1))) <= priceValue
+        );
+      }
+    }
+    if (colorValue.length) {
+      filteredCars = filteredCars.filter((car) =>
+        colorValue.includes(car.car_color.toLowerCase())
       );
     }
-    if (carYear) {
-      filteredCars = filteredCars.filter(
-        (car) => car.car_model_year === Number(carYear)
+    if (yearValue.length) {
+      filteredCars = filteredCars.filter((car) =>
+        yearValue.includes(`${car.car_model_year}`)
       );
     }
-    if (year1900To2000) {
+    if (availability) {
       filteredCars = filteredCars.filter(
-        (car) => car.car_model_year >= 1900 && car.car_model_year <= 2000
-      );
-    }
-    if (year2001ToPresent) {
-      filteredCars = filteredCars.filter(
-        (car) =>
-          car.car_model_year >= 2001 &&
-          car.car_model_year <= new Date().getFullYear()
-      );
-    }
-    if (price1Kto2K) {
-      filteredCars = filteredCars.filter(
-        (car) =>
-          Math.floor(Number(car.price.substring(1))) >= 1000 &&
-          Math.floor(Number(car.price.substring(1))) <= 2000
-      );
-    }
-    if (price2Kto3K) {
-      filteredCars = filteredCars.filter(
-        (car) =>
-          Math.floor(Number(car.price.substring(1))) >= 2001 &&
-          Math.floor(Number(car.price.substring(1))) <= 3000
-      );
-    }
-    if (price3KAbove) {
-      filteredCars = filteredCars.filter(
-        (car) => Math.floor(Number(car.price.substring(1))) >= 3001
+        (car) => car.availability === availability
       );
     }
     setListedCars(filteredCars);
     toggleOverlay();
+    setOpen(!open);
   };
 
   const updateSearch = (search: string) => {
     console.log('search', search);
     setSearch(search);
   };
+
+  const closeFilters = () => {
+    setVisible(false);
+    setOpen(!open);
+  };
+
+  const interpolate = (start: number, end: number) => {
+    let k = (priceValue - 0) / 10; // 0 =>min  && 10 => MAX
+    return Math.ceil((1 - k) * start + k * end) % 256;
+  };
+
+  const color = () => {
+    let r = interpolate(255, 0);
+    let g = interpolate(0, 255);
+    let b = interpolate(0, 0);
+    return `rgb(${r},${g},${b})`;
+  };
+
+  const onPriceValueChage = (price: number) => {
+    setPriceValue(price);
+    setPriceChanged(true);
+  }
 
   const ListEmptyComponent = () => (
     <View style={styles.noDataContainer}>
@@ -181,7 +205,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
   const Car = ({ carDetails }: any) => {
     const navigation = useNavigation<ListingScreenProp>();
     const randomImage = generateRandomImage(imagesArray);
-    const availability = carDetails.availability ? 'Available' : 'Sold out'
+    const availability = carDetails.availability ? 'Available' : 'Sold out';
     return (
       <SafeAreaView style={styles.imageContainer}>
         <TouchableOpacity
@@ -204,7 +228,16 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
           <Text style={commonStyles.title}>{carDetails.car}</Text>
           <Text style={commonStyles.subTitle}>{`${carDetails.price}/day`}</Text>
           <Text style={commonStyles.subTitle}>{carDetails.car_model_year}</Text>
-          <Text style={[commonStyles.subTitle, !carDetails.availability ? commonStyles.danger : commonStyles.success]}>{availability}</Text>
+          <Text
+            style={[
+              commonStyles.subTitle,
+              !carDetails.availability
+                ? commonStyles.danger
+                : commonStyles.success,
+            ]}
+          >
+            {availability}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -225,6 +258,7 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             onClear={() => setListedCars(cars)}
             inputContainerStyle={styles.searchInput}
             containerStyle={styles.searchBarContainer}
+            theme={colorTheme()}
           />
           <FlatList
             numColumns={2}
@@ -236,15 +270,28 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             onRefresh={refreshCars}
             ListEmptyComponent={ListEmptyComponent}
           />
-          <TouchableOpacity
-            onPress={onPressFilters}
-            style={styles.touchableOpacityStyle}
+          <SpeedDial
+            isOpen={open}
+            icon={{ name: 'add', color: '#fff' }}
+            openIcon={{ name: 'close', color: '#fff' }}
+            onOpen={() => setOpen(!open)}
+            onClose={() => setOpen(!open)}
+            title='Filter'
+            color='#397af8'
           >
-            <View style={styles.floatingButtonStyle}>
-              <Icon type='font-awesome' name='filter' color='white' />
-              <Text style={commonStyles.textWhite}>{appText.filters}</Text>
-            </View>
-          </TouchableOpacity>
+            <SpeedDial.Action
+              icon={{ name: 'add', color: '#fff' }}
+              title='Add'
+              onPress={toggleOverlay}
+              color='#397af8'
+            />
+            <SpeedDial.Action
+              icon={{ name: 'close', color: '#fff' }}
+              title='Close'
+              onPress={closeFilters}
+              color='#397af8'
+            />
+          </SpeedDial>
         </>
       ) : (
         <Overlay
@@ -279,88 +326,217 @@ const ListingsScreen: React.FC<CarStackParamList> = () => {
             }}
           />
           <View style={styles.filterContainer}>
-            <ListItem bottomDivider>
-              <ListItem.Content>
-                <ListItem.Title>{appText.carMake}</ListItem.Title>
-              </ListItem.Content>
-              <ListItem.Content>
-                <TextInput
-                  style={styles.input}
-                  onChangeText={onCarMakeChange}
-                  value={carMake}
-                  placeholder={appText.carMakePlaceholder}
-                />
-              </ListItem.Content>
-            </ListItem>
-            <ListItem bottomDivider>
-              <ListItem.Content>
-                <ListItem.Title>{appText.carColor}</ListItem.Title>
-              </ListItem.Content>
-              <ListItem.Content>
-                <TextInput
-                  style={styles.input}
-                  onChangeText={onCarColorChange}
-                  value={carColor}
-                  placeholder={appText.carColorPlaceholder}
-                />
-              </ListItem.Content>
-            </ListItem>
-            <ListItem bottomDivider>
-              <ListItem.Content>
-                <ListItem.Title>{appText.dayRentalPrice}</ListItem.Title>
-              </ListItem.Content>
-              <ListItem.Content>
-                <CheckBox
-                  center
-                  containerStyle={styles.checkBoxContainer}
-                  title='$1000 - $2000'
-                  checked={price1Kto2K}
-                  onPress={() => setPrice1Kto2K(!price1Kto2K)}
-                />
-                <CheckBox
-                  center
-                  containerStyle={styles.checkBoxContainer}
-                  title='$2001 - $3001'
-                  checked={price2Kto3K}
-                  onPress={() => setPrice2Kto3K(!price2Kto3K)}
-                />
-                <CheckBox
-                  center
-                  containerStyle={styles.checkBoxContainer}
-                  title='> $3000'
-                  checked={price3KAbove}
-                  onPress={() => setPrice3KAbove(!price3KAbove)}
-                />
-              </ListItem.Content>
-            </ListItem>
-            <ListItem>
-              <ListItem.Content>
-                <ListItem.Title>{appText.year}</ListItem.Title>
-              </ListItem.Content>
-              <ListItem.Content>
-                <TextInput
-                  style={styles.input}
-                  onChangeText={onChangeCarYear}
-                  value={carYear}
-                  placeholder={appText.yearPlaceholder}
-                  keyboardType='numeric'
-                />
-                <CheckBox
-                  center
-                  containerStyle={styles.checkBoxContainer}
-                  title='1900 - 2000'
-                  checked={year1900To2000}
-                  onPress={() => setYear1900To2000(!year1900To2000)}
-                />
-                <CheckBox
-                  center
-                  containerStyle={styles.checkBoxContainer}
-                  title='2001 - Present'
-                  checked={year2001ToPresent}
-                  onPress={() => setYear2001ToPresent(!year2001ToPresent)}
-                />
-              </ListItem.Content>
-            </ListItem>
+            <SafeAreaView
+              style={[
+                Platform.OS !== 'android' && {
+                  zIndex: 10,
+                },
+                styles.filterSafeArea,
+              ]}
+            >
+              <ListItem.Accordion
+                content={
+                  <ListItem.Content>
+                    <ListItem.Title style={commonStyles.title}>
+                      {appText.carMake}
+                    </ListItem.Title>
+                  </ListItem.Content>
+                }
+                isExpanded={expanded}
+                onPress={() => {
+                  setExpanded(!expanded);
+                }}
+              >
+                <ListItem style={commonStyles.marginVertical10}>
+                  <ListItem.Content>
+                    <DropDownPicker
+                      open={openDDMake}
+                      value={carMakeValue}
+                      items={carMakes}
+                      setOpen={setOpenDDMake}
+                      setValue={setCarMakeValue}
+                      setItems={setCarMakes}
+                      placeholder={appText.carMakePlaceholder}
+                      multiple
+                      mode='BADGE'
+                      onSelectItem={() => setOpenDDMake(false)}
+                    />
+                  </ListItem.Content>
+                </ListItem>
+              </ListItem.Accordion>
+            </SafeAreaView>
+            <SafeAreaView
+              style={[
+                Platform.OS !== 'android' && {
+                  zIndex: 8,
+                },
+                styles.filterSafeArea,
+              ]}
+            >
+              <ListItem.Accordion
+                content={
+                  <ListItem.Content>
+                    <ListItem.Title style={commonStyles.title}>
+                      {appText.dayRentalPrice}
+                    </ListItem.Title>
+                  </ListItem.Content>
+                }
+                isExpanded={carPriceExpanded}
+                onPress={() => {
+                  setCarPriceExpanded(!carPriceExpanded);
+                }}
+              >
+                <SafeAreaView
+                  style={[
+                    commonStyles.marginVertical10,
+                    commonStyles.paddingHorizontal10,
+                  ]}
+                >
+                  <Slider
+                    value={priceValue}
+                    onValueChange={onPriceValueChage}
+                    maximumValue={maximumPrice}
+                    minimumValue={minimumPrice}
+                    step={1}
+                    allowTouchTrack
+                    trackStyle={styles.sliderTrack}
+                    thumbStyle={styles.sliderThumb}
+                    thumbProps={{
+                      children: (
+                        <Icon
+                          type='font-awesome'
+                          name='car'
+                          size={15}
+                          reverse
+                          containerStyle={styles.sliderIcon}
+                          color={color()}
+                        />
+                      ),
+                    }}
+                  />
+                  <Text
+                    style={[commonStyles.subTitle, commonStyles.paddingTop10]}
+                  >{`Price Range Selected : ${
+                    minimumPrice === priceValue
+                      ? `$${minimumPrice}`
+                      : `$${minimumPrice} - $${priceValue}`
+                  }`}</Text>
+                </SafeAreaView>
+              </ListItem.Accordion>
+            </SafeAreaView>
+            <SafeAreaView
+              style={[
+                Platform.OS !== 'android' && {
+                  zIndex: 6,
+                },
+                styles.filterSafeArea,
+              ]}
+            >
+              <ListItem.Accordion
+                content={
+                  <ListItem.Content>
+                    <ListItem.Title style={commonStyles.title}>
+                      {appText.carColor}
+                    </ListItem.Title>
+                  </ListItem.Content>
+                }
+                isExpanded={carYearExpanded}
+                onPress={() => {
+                  setCarYearExpanded(!carYearExpanded);
+                }}
+              >
+                <SafeAreaView
+                  style={[
+                    commonStyles.marginVertical20,
+                    commonStyles.paddingHorizontal10,
+                  ]}
+                >
+                  <DropDownPicker
+                    open={openDD}
+                    value={colorValue}
+                    items={colors}
+                    setOpen={setOpenDD}
+                    setValue={setColorValue}
+                    setItems={setColors}
+                    placeholder={appText.carColorPlaceholder}
+                    multiple
+                    mode='BADGE'
+                    badgeDotColors={colorValue[colorValue.length - 1]}
+                    onSelectItem={() => setOpenDD(false)}
+                  />
+                </SafeAreaView>
+              </ListItem.Accordion>
+            </SafeAreaView>
+            <SafeAreaView
+              style={[
+                Platform.OS !== 'android' && {
+                  zIndex: 4,
+                },
+                styles.filterSafeArea,
+              ]}
+            >
+              <ListItem.Accordion
+                content={
+                  <ListItem.Content>
+                    <ListItem.Title style={commonStyles.title}>
+                      {appText.year}
+                    </ListItem.Title>
+                  </ListItem.Content>
+                }
+                isExpanded={carColorExpanded}
+                onPress={() => {
+                  setCarColorExpanded(!carColorExpanded);
+                }}
+              >
+                <ListItem style={commonStyles.marginVertical10}>
+                  <ListItem.Content>
+                    <DropDownPicker
+                      open={openDDYear}
+                      value={yearValue}
+                      items={years}
+                      setOpen={setOpenDDYear}
+                      setValue={setYearValue}
+                      setItems={setYears}
+                      placeholder={appText.yearPlaceholder}
+                      multiple
+                      mode='BADGE'
+                      onSelectItem={() => setOpenDDYear(false)}
+                    />
+                  </ListItem.Content>
+                </ListItem>
+              </ListItem.Accordion>
+            </SafeAreaView>
+            <SafeAreaView
+              style={[
+                Platform.OS !== 'android' && {
+                  zIndex: 2,
+                },
+                styles.filterSafeArea,
+              ]}
+            >
+              <ListItem.Accordion
+                content={
+                  <ListItem.Content>
+                    <ListItem.Title style={commonStyles.title}>
+                      {appText.carAvailability}
+                    </ListItem.Title>
+                  </ListItem.Content>
+                }
+                isExpanded={carAvailabilityExpanded}
+                onPress={() => {
+                  setCarAvailabilityExpanded(!carAvailabilityExpanded);
+                }}
+              >
+                <SafeAreaView style={commonStyles.marginVertical10}>
+                  <CheckBox
+                    containerStyle={styles.checkBoxContainer}
+                    title='Availability'
+                    checked={availability}
+                    onPress={() => setAvailability(!availability)}
+                  />
+                </SafeAreaView>
+              </ListItem.Accordion>
+            </SafeAreaView>
           </View>
         </Overlay>
       )}
