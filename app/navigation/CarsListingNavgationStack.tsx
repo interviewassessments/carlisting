@@ -15,7 +15,9 @@ const CarsListingNavgationStack = () => {
         name='Listings'
         component={ListingsScreen}
       />
-      <Stack.Screen name='Details' component={DetailsScreen} />
+      <Stack.Screen name='Details' options={{
+        title: 'Car Details'
+      }} component={DetailsScreen} />
     </Stack.Navigator>
   );
 };
