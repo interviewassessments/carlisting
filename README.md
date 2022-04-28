@@ -17,8 +17,11 @@ Requirements are listed [here](https://github.com/carshair/hiring-frontend-asses
 3. Sometimes images might be blank due not available of the image at that time.
 4. Added the car details screen to showcase the complete details about the listing of the car with facility to book and book button is only a placeholder.
 5. Alert being added if enabled book button is clicked and for soldout the book button is disabled.
+6. Not used environments
 
 ## App Architecture
+
+Added pull to refresh feature on the listing page to fetch the latest cars data.
 
 ### React Native + Expo
 
